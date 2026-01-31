@@ -1,196 +1,190 @@
---[[ 
-    CÚPULA SC - ULTIMATE DEVELOPER SUITE
-    Atalho: [Insert]
-]]
 
-local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local _H = game:GetService("HttpService")
+local _C = game:GetService("CoreGui")
+local _U = game:GetService("UserInputService")
+local _P = game:GetService("Players")
+local _L = _P.LocalPlayer
 
--- CONFIGURAÇÃO
-local ADMIN_KEY = "CUPULACAOSBK"
--- Substitua pela URL do seu Web App do Google Apps Script
-local GOOGLE_SCRIPT_URL = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI"
-local ActiveKeys = {} 
+local _AK = "CUPULACAOSBK"
+local _GURL = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI"
+local _KTable = {}
 
-if CoreGui:FindFirstChild("CupulaSc") then CoreGui:FindFirstChild("CupulaSc"):Destroy() end
+-- Controles
+local _AutoE, _InstaE = false, false
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CupulaSc"
-ScreenGui.Parent = CoreGui
+if _C:FindFirstChild("CupulaPrestige") then _C.CupulaPrestige:Destroy() end
 
--- FUNÇÕES CORE
-local function generateRandomKey()
-    local chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-    local r1 = ""
-    for i = 1, 6 do
-        local r = math.random(1, #chars)
-        r1 = r1 .. chars:sub(r,r)
-    end
-    return "KEYCUPULA__A" .. r1:sub(1,3) .. r1:sub(4,6) .. "Ef"
+local Screen = Instance.new("ScreenGui", _C)
+Screen.Name = "CupulaPrestige"
+Screen.IgnoreGuiInset = true
+
+-- ESTILO DISCORD CLEAN
+local function _Style(obj, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r or 8)
+    c.Parent = obj
 end
 
-local function saveToGoogleSheets(key, dias, horas)
-    local expiraEm = os.date("%d/%m/%Y %H:%M", os.time() + (dias * 86400) + (horas * 3600))
-    local data = {
-        ["key"] = key,
-        ["duracao"] = dias .. "d " .. horas .. "h",
-        ["expiracao"] = expiraEm,
-        ["gerado_por"] = LocalPlayer.Name
-    }
-    
-    pcall(function()
-        -- O Google Sheets via App Script geralmente exige o envio como JSON
-        HttpService:PostAsync(GOOGLE_SCRIPT_URL, HttpService:JSONEncode(data))
-    end)
+local function _AddStroke(obj, color)
+    local s = Instance.new("UIStroke")
+    s.Color = color or Color3.fromRGB(88, 101, 242) -- Roxo Discord
+    s.Thickness = 1.5
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = obj
 end
 
--- INTERFACE DE LOGIN
-local LoginFrame = Instance.new("Frame", ScreenGui)
-LoginFrame.Size = UDim2.new(0, 300, 0, 200)
-LoginFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-LoginFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Instance.new("UICorner", LoginFrame)
+-- TELA DE LOGIN
+local Login = Instance.new("Frame", Screen)
+Login.Size = UDim2.new(0, 320, 0, 240)
+Login.Position = UDim2.new(0.5, -160, 0.5, -120)
+Login.BackgroundColor3 = Color3.fromRGB(30, 31, 34)
+_Style(Login, 12)
+_AddStroke(Login)
 
-local KeyInput = Instance.new("TextBox", LoginFrame)
-KeyInput.Size = UDim2.new(0.8, 0, 0, 40)
-KeyInput.Position = UDim2.new(0.1, 0, 0.3, 0)
-KeyInput.PlaceholderText = "Insira a Key..."
-KeyInput.Text = ""
+local LTitle = Instance.new("TextLabel", Login)
+LTitle.Size = UDim2.new(1, 0, 0, 60)
+LTitle.Text = "CÚPULA SC"
+LTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+LTitle.Font = Enum.Font.GothamBold
+LTitle.TextSize = 22
+LTitle.BackgroundTransparency = 1
 
-local LoginBtn = Instance.new("TextButton", LoginFrame)
-LoginBtn.Size = UDim2.new(0.8, 0, 0, 40)
-LoginBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
-LoginBtn.Text = "LOGAR"
-LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-Instance.new("UICorner", LoginBtn)
+local KInp = Instance.new("TextBox", Login)
+KInp.Size = UDim2.new(0.85, 0, 0, 45)
+KInp.Position = UDim2.new(0.075, 0, 0.35, 0)
+KInp.PlaceholderText = "Licença de Acesso"
+KInp.BackgroundColor3 = Color3.fromRGB(43, 45, 49)
+KInp.TextColor3 = Color3.new(1,1,1)
+_Style(KInp, 8)
 
--- PAINEL PRINCIPAL
-local Main = Instance.new("Frame", ScreenGui)
+local LBtn = Instance.new("TextButton", Login)
+LBtn.Size = UDim2.new(0.85, 0, 0, 45)
+LBtn.Position = UDim2.new(0.075, 0, 0.65, 0)
+LBtn.Text = "ENTRAR"
+LBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+LBtn.TextColor3 = Color3.new(1,1,1)
+LBtn.Font = Enum.Font.GothamBold
+_Style(LBtn, 8)
+
+-- HUB PRINCIPAL
+local Main = Instance.new("Frame", Screen)
 Main.Visible = false
-Main.Size = UDim2.new(0, 500, 0, 350)
-Main.Position = UDim2.new(0.5, -250, 0.5, -175)
-Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
-Main.Active = true
-Main.Draggable = true
-Instance.new("UICorner", Main)
+Main.Size = UDim2.new(0, 580, 0, 380)
+Main.Position = UDim2.new(0.5, -290, 0.5, -190)
+Main.BackgroundColor3 = Color3.fromRGB(24, 25, 28)
+_Style(Main, 12)
+_AddStroke(Main)
 
-local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 140, 1, 0)
-Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-Instance.new("UICorner", Sidebar)
+-- Sidebar (Roxo Escuro Discord)
+local Side = Instance.new("Frame", Main)
+Side.Size = UDim2.new(0, 160, 1, 0)
+Side.BackgroundColor3 = Color3.fromRGB(18, 19, 21)
+_Style(Side, 12)
 
-local Content = Instance.new("Frame", Main)
-Content.Position = UDim2.new(0, 150, 0, 10)
-Content.Size = UDim2.new(1, -160, 1, -20)
-Content.BackgroundTransparency = 1
+local Container = Instance.new("Frame", Main)
+Container.Position = UDim2.new(0, 170, 0, 15)
+Container.Size = UDim2.new(1, -185, 1, -30)
+Container.BackgroundTransparency = 1
 
 local Tabs = {
-    Home = Instance.new("Frame", Content),
-    LuckyBlock = Instance.new("Frame", Content),
-    Tsunami = Instance.new("Frame", Content),
-    Admin = Instance.new("Frame", Content)
+    Home = Instance.new("ScrollingFrame", Container),
+    Lucky = Instance.new("ScrollingFrame", Container),
+    Admin = Instance.new("ScrollingFrame", Container)
 }
-for _, t in pairs(Tabs) do t.Size = UDim2.new(1,0,1,0) t.BackgroundTransparency = 1 t.Visible = false end
-Tabs.Home.Visible = true
+for _, t in pairs(Tabs) do 
+    t.Size = UDim2.new(1,0,1,0); t.Visible = false; t.BackgroundTransparency = 1; t.ScrollBarThickness = 0 
+    local list = Instance.new("UIListLayout", t)
+    list.Padding = UDim.new(0, 10)
+end
 
--- LÓGICA DE LOGIN
-LoginBtn.MouseButton1Click:Connect(function()
-    local entered = KeyInput.Text
-    if entered == ADMIN_KEY then
-        LoginFrame.Visible = false Main.Visible = true Tabs.Admin.Visible = false
-    elseif ActiveKeys[entered] and os.time() < ActiveKeys[entered] then
-        LoginFrame.Visible = false Main.Visible = true Sidebar.AdminBtn.Visible = false
-    else
-        KeyInput.Text = "" KeyInput.PlaceholderText = "KEY INVÁLIDA OU EXPIRADA!"
-    end
-end)
+-- ABA INÍCIO (BEM VINDO BONITO)
+local WelcomeLabel = Instance.new("TextLabel", Tabs.Home)
+WelcomeLabel.Size = UDim2.new(1, 0, 0, 100)
+WelcomeLabel.Text = "Olá, " .. _L.DisplayName .. "!\nBem-vindo à Cúpula SC Prestige."
+WelcomeLabel.TextColor3 = Color3.fromRGB(150, 150, 200)
+WelcomeLabel.Font = Enum.Font.GothamBold
+WelcomeLabel.TextSize = 20
+WelcomeLabel.BackgroundTransparency = 1
 
---- ABA ADMIN ---
+-- ABA ADMIN (COM TEMPO DE DURAÇÃO)
+local DayInp = Instance.new("TextBox", Tabs.Admin)
+DayInp.Size = UDim2.new(0.48, 0, 0, 40); DayInp.PlaceholderText = "Dias"; DayInp.BackgroundColor3 = Color3.fromRGB(43,45,49); DayInp.TextColor3 = Color3.new(1,1,1); _Style(DayInp)
+
+local HourInp = Instance.new("TextBox", Tabs.Admin)
+HourInp.Size = UDim2.new(0.48, 0, 0, 40); HourInp.Position = UDim2.new(0.52, 0, 0, 0); HourInp.PlaceholderText = "Horas"; HourInp.BackgroundColor3 = Color3.fromRGB(43,45,49); HourInp.TextColor3 = Color3.new(1,1,1); _Style(HourInp)
+
+local KeyRes = Instance.new("TextBox", Tabs.Admin)
+KeyRes.Size = UDim2.new(1, 0, 0, 40); KeyRes.Text = "Key gerada aparecerá aqui"; KeyRes.ReadOnly = true; KeyRes.BackgroundColor3 = Color3.fromRGB(30,30,35); KeyRes.TextColor3 = Color3.new(1,1,1); _Style(KeyRes)
+
 local GenBtn = Instance.new("TextButton", Tabs.Admin)
-GenBtn.Size = UDim2.new(1, 0, 0, 40)
-GenBtn.Text = "GERAR KEY"
-GenBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 80)
-Instance.new("UICorner", GenBtn)
-
-local DiasInput = Instance.new("TextBox", Tabs.Admin)
-DiasInput.PlaceholderText = "Dias (0-120)"
-DiasInput.Size = UDim2.new(0.48, 0, 0, 35)
-DiasInput.Position = UDim2.new(0,0,0.15,0)
-
-local HorasInput = Instance.new("TextBox", Tabs.Admin)
-HorasInput.PlaceholderText = "Horas (0-24)"
-HorasInput.Size = UDim2.new(0.48, 0, 0, 35)
-HorasInput.Position = UDim2.new(0.52,0,0.15,0)
-
-local KeyOut = Instance.new("TextBox", Tabs.Admin)
-KeyOut.Size = UDim2.new(1,0,0,35)
-KeyOut.Position = UDim2.new(0,0,0.3,0)
-KeyOut.ReadOnly = true
-KeyOut.Text = "Key gerada aparecerá aqui"
+GenBtn.Size = UDim2.new(1, 0, 0, 45); GenBtn.Text = "GERAR E SALVAR NA PLANILHA"; GenBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242); GenBtn.TextColor3 = Color3.new(1,1,1); _Style(GenBtn)
 
 GenBtn.MouseButton1Click:Connect(function()
-    local d = math.clamp(tonumber(DiasInput.Text) or 0, 0, 120)
-    local h = math.clamp(tonumber(HorasInput.Text) or 0, 0, 24)
-    local k = generateRandomKey()
-    ActiveKeys[k] = os.time() + (d * 86400) + (h * 3600)
-    KeyOut.Text = k
-    saveToGoogleSheets(k, d, h) -- Chama a função atualizada
+    local d = tonumber(DayInp.Text) or 0
+    local h = tonumber(HourInp.Text) or 0
+    local k = "KEY-" .. math.random(1000,9999)
+    KeyRes.Text = k
+    local exp = os.date("%d/%m/%Y %H:%M", os.time() + (d * 86400) + (h * 3600))
+    pcall(function()
+        _H:PostAsync(_GURL, _H:JSONEncode({key = k, duracao = d.."d "..h.."h", expiracao = exp, gerado_por = _L.Name}))
+    end)
 end)
 
---- ABA LUCKY BLOCK (MOTOR V3) ---
-local insta = false
-local auto = false
-local function addSBtn(txt, pos, callback)
-    local b = Instance.new("TextButton", Tabs.LuckyBlock)
-    b.Size = UDim2.new(1,0,0,40)
-    b.Position = pos
-    b.BackgroundColor3 = Color3.fromRGB(30,30,35)
-    b.Text = txt
-    Instance.new("UICorner", b)
-    local act = false
+-- ABA LUCKY BLOCK (TOGGLES)
+local function CreateToggle(txt, parent, cb)
+    local b = Instance.new("TextButton", parent)
+    b.Size = UDim2.new(1, 0, 0, 45); b.Text = txt .. " [OFF]"; b.BackgroundColor3 = Color3.fromRGB(43, 45, 49); b.TextColor3 = Color3.new(1,1,1); _Style(b)
+    local s = false
     b.MouseButton1Click:Connect(function()
-        act = not act callback(act)
-        b.BackgroundColor3 = act and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(30,30,35)
+        s = not s
+        b.Text = txt .. (s and " [ON]" or " [OFF]")
+        b.BackgroundColor3 = s and Color3.fromRGB(88, 101, 242) or Color3.fromRGB(43, 45, 49)
+        cb(s)
     end)
 end
-addSBtn("AUTO E", UDim2.new(0,0,0,0), function(v) auto = v end)
-addSBtn("INSTA E", UDim2.new(0,0,0.15,0), function(v) insta = v end)
+CreateToggle("Auto Aceitar (E)", Tabs.Lucky, function(v) _AutoE = v end)
+CreateToggle("Instantâneo (Sem espera)", Tabs.Lucky, function(v) _InstaE = v end)
 
---- NAVEGAÇÃO ---
-local function nav(name, pos, tab)
-    local b = Instance.new("TextButton", Sidebar)
-    b.Size = UDim2.new(0.9,0,0,35)
-    b.Position = pos
-    b.Text = name
-    b.BackgroundColor3 = Color3.fromRGB(25,25,30)
-    Instance.new("UICorner", b)
-    b.MouseButton1Click:Connect(function()
-        for _, t in pairs(Tabs) do t.Visible = false end
-        tab.Visible = true
-    end)
-    return b
+-- MOBILE MINIMIZE BUTTON
+local MobileBtn = Instance.new("TextButton", Screen)
+MobileBtn.Size = UDim2.new(0, 50, 0, 50)
+MobileBtn.Position = UDim2.new(0, 10, 0.5, -25)
+MobileBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+MobileBtn.Text = "HUB"
+MobileBtn.TextColor3 = Color3.new(1,1,1)
+_Style(MobileBtn, 25)
+_AddStroke(MobileBtn, Color3.new(1,1,1))
+
+MobileBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+
+-- NAVEGAÇÃO
+local function Nav(txt, y, tab)
+    local b = Instance.new("TextButton", Side)
+    b.Size = UDim2.new(0.9, 0, 0, 40); b.Position = UDim2.new(0.05, 0, 0, y); b.Text = txt; b.BackgroundColor3 = Color3.fromRGB(43, 45, 49); b.TextColor3 = Color3.new(1,1,1); _Style(b)
+    b.MouseButton1Click:Connect(function() for _, t in pairs(Tabs) do t.Visible = false end tab.Visible = true end)
 end
-nav("Início", UDim2.new(0.05,0,0.15,0), Tabs.Home)
-nav("Lucky Block", UDim2.new(0.05,0,0.3,0), Tabs.LuckyBlock)
-nav("Tsunami", UDim2.new(0.05,0,0.45,0), Tabs.Tsunami)
-Sidebar["AdminBtn"] = nav("ADMIN", UDim2.new(0.05,0,0.85,0), Tabs.Admin)
+Nav("Início", 60, Tabs.Home)
+Nav("Lucky Block", 110, Tabs.Lucky)
+Nav("Admin", 320, Tabs.Admin)
 
--- CORE LOGIC
+-- LOGICA LOGIN
+LBtn.MouseButton1Click:Connect(function()
+    if KInp.Text == _AK then Login.Visible = false; Main.Visible = true; Tabs.Home.Visible = true end
+end)
+
+-- LOOP AUTO E / INSTA E
 task.spawn(function()
     while task.wait(0.1) do
-        if insta or auto then
-            for _, p in ipairs(workspace:GetDescendants()) do
-                if p:IsA("ProximityPrompt") then
-                    if insta then p.HoldDuration = 0 end
-                    if auto and p.Enabled then
-                        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            local targetPos = p.Parent:IsA("Model") and p.Parent:GetModelCFrame().Position or p.Parent.Position
-                            local d = (hrp.Position - targetPos).Magnitude
-                            if d <= p.MaxActivationDistance then fireproximityprompt(p) end
+        if _AutoE or _InstaE then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") then
+                    if _InstaE then obj.HoldDuration = 0 end
+                    if _AutoE and obj.Enabled then
+                        local char = _L.Character
+                        if char and char:FindFirstChild("HumanoidRootPart") then
+                            if (char.HumanoidRootPart.Position - obj.Parent:GetModelCFrame().Position).Magnitude <= obj.MaxActivationDistance then
+                                fireproximityprompt(obj)
+                            end
                         end
                     end
                 end
@@ -199,6 +193,12 @@ task.spawn(function()
     end
 end)
 
-UserInputService.InputBegan:Connect(function(i, g)
-    if not g and i.KeyCode == Enum.KeyCode.Insert then Main.Visible = not Main.Visible end
-end)
+-- Dragging
+local function Drag(f)
+    local d, di, ds, sp
+    f.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then d = true ds = i.Position sp = f.Position end end)
+    _U.InputChanged:Connect(function(i) if i == di and d then local del = i.Position - ds f.Position = UDim2.new(sp.X.Scale, sp.X.Offset + del.X, sp.Y.Scale, sp.Y.Offset + del.Y) end end)
+    f.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then di = i end end)
+    _U.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then d = false end end)
+end
+Drag(Main); Drag(Login)
