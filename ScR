@@ -4,7 +4,7 @@ local _U = game:GetService("UserInputService")
 local _P = game:GetService("Players")
 local _L = _P.LocalPlayer
 
-local _GURL = "https://script.google.com/macros/s/AKfycbzWS_o8b02ABnK5OmO3ph6rOHy0ABM0t4dMQ9otmEw3hgSpwCp8jc2MmQV85qbdxZSIRQ/exec" 
+local _GURL = "https://script.google.com/macros/s/AKfycbyoraAc1q0ngi6BziPnEEMN1_ZVXlvsnGIDZc0Hxit4ydl6LTcu1qDV9LLpqjR3XLIYUg/exec" 
 local _SK = "\67\85\80\85\76\65\67\65\79\83\66\75"
 
 local _AutoE, _InstaE = false, false
